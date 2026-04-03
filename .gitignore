@@ -52,7 +52,6 @@ local
 .vercel
 /.env.production
 
-pnpm-lock.yaml
 .idea/
 
 .env*
