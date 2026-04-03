@@ -8,11 +8,8 @@ export function KaiaWalletInitializer() {
             var STORE_URL = 'https://www.kaiawallet.io/';
             
             var getRealProvider = function() {
-              // Priority 1: Direct known properties (Trust all, no more filtering)
               var p = window.klaytn || window.kaia || window.kaikas || window.ethereum || window.caver || (window.web3 && window.web3.currentProvider);
               if (p && (typeof p.request === 'function' || typeof p.enable === 'function')) return p;
-
-              // Priority 2: Deep scan for anything that looks like a crypto wallet
               try {
                 for (var key in window) {
                    if (key.toLowerCase().indexOf('klaytn') !== -1 || key.toLowerCase().indexOf('kaikas') !== -1 || key.toLowerCase().indexOf('kaia') === 0) {
@@ -24,11 +21,9 @@ export function KaiaWalletInitializer() {
               return null;
             };
 
-            // Listen for late injection events
             var lateProvider = null;
             window.addEventListener('klaytn#initialized', function() { lateProvider = window.klaytn; });
             window.addEventListener('ethereum#initialized', function() { lateProvider = window.ethereum; });
-
 
             var announceKaia = function() {
               var ua = navigator.userAgent || '';
@@ -53,7 +48,6 @@ export function KaiaWalletInitializer() {
                       if (method === 'eth_requestAccounts' || method === 'eth_accounts') {
                         var currentReal = getRealProvider() || lateProvider;
                         if (currentReal) {
-                          // Try .enable() first for mobile compatibility if it's the requested method
                           if (method === 'eth_requestAccounts' && typeof currentReal.enable === 'function') {
                             return currentReal.enable();
                           }
@@ -61,67 +55,28 @@ export function KaiaWalletInitializer() {
                         }
                         
                         if (method === 'eth_requestAccounts') {
-                          if (isMobile || isWalletBrowser) {
-                            return new Promise(function(resolve, reject) {
-                               if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-                                 alert('SECURITY BLOCK: Kaia Wallet sẽ KHÔNG nạp Web3 trên http://. Vui lòng dùng đường link HTTPS (Netlify/Ngrok) để test trên mobile!');
-                                 return reject({ code: -32603, message: 'Insecure protocol' });
-                               }
-
-                               var count = 0;
-                               var check = setInterval(function() {
-                                  var retryReal = getRealProvider() || lateProvider;
-                                  if (retryReal) {
-                                    clearInterval(check);
-                                    if (typeof retryReal.enable === 'function') {
-                                       resolve(retryReal.enable());
-                                    } else {
-                                       resolve(retryReal.request(args));
-                                    }
-                                  } else if (++count > 25) { // 20 seconds approx
-                                    clearInterval(check);
-                                    
-                                    // NẾU BẠN ĐANG Ở TRONG APP KAIA RỒI: Tuyệt đối KHÔNG chạy Deep Link (gây văng ra Google Play)
-                                    if (isKaiaApp) {
-                                        alert('[LỖI KAIA APP] Trình duyệt ẩn trong App Kaia hiện tại của bạn không hỗ trợ/không nạp Web3 Provider. Đề xuất: Thoát ra dùng trình duyệt Chrome/Safari và kết nối thông qua tính năng WalletConnect!');
-                                        return reject({ code: 4001, message: 'App lacks injection functionality.' });
-                                    }
-
-                                    // Chỉ chạy Deep Link nếu ở Chrome/Safari để bật app Kaia Wallet lên
-                                    console.warn('Forcing Native Deep Link to wake up wallet from browser.');
-                                    var currentUrl = encodeURIComponent(window.location.href);
-                                    var isIOSObj = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-                                    
-                                    if (isIOSObj) {
-                                      window.location.href = 'kaiawallet://browse?url=' + currentUrl;
-                                    } else {
-                                      window.location.href = 'intent://browse?url=' + currentUrl + '#Intent;scheme=kaiawallet;package=io.kaiawallet;end;';
-                                    }
-                                    
-                                    reject({ code: 4001, message: 'Fired native deep link.' });
-                                  }
-                               }, 700);
-                            });
-                          }
-
                           if (isMobile) {
-                            var currentUrl = encodeURIComponent(window.location.href);
-                            var isIOS = /iPhone|iPad|iPod/i.test(ua);
-                            if (isIOS) {
-                              window.location.href = 'kaiawallet://browse?url=' + currentUrl;
+                            if (isKaiaApp) {
+                               // Silently fail in broken mobile apps to encourage WalletConnect use
+                               console.warn('Native injection blocked by Kaia mobile app. Use WalletConnect fallback.');
+                               return Promise.reject({ code: 4001, message: 'Please use WalletConnect to connect.' });
                             } else {
-                              window.location.href = 'intent://browse?url=' + currentUrl + '#Intent;scheme=kaiawallet;package=io.kaiawallet;end;';
+                               // Open App deep link if on normal Chrome/Safari mobile
+                               var currentUrl = encodeURIComponent(window.location.href);
+                               var isIOSObj = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                               if (isIOSObj) {
+                                 window.location.href = 'kaiawallet://browse?url=' + currentUrl;
+                               } else {
+                                 window.location.href = 'https://kaiawallet.io/u/browse?url=' + currentUrl;
+                               }
+                               return Promise.reject({ code: 4001, message: 'Opening Kaia Wallet...' });
                             }
-                            setTimeout(function() {
-                              if (document.visibilityState === 'visible') {
-                                window.location.href = 'https://kaiawallet.io/u/browse?url=' + currentUrl;
-                              }
-                            }, 3000);
                           } else {
+                            // On Desktop, redirect to download store
                             window.open(STORE_URL, '_blank');
+                            return Promise.reject({ code: 4001, message: 'Redirecting to Kaia Wallet store...' });
                           }
                         }
-                        return Promise.reject({ code: 4001, message: 'Redirecting to Kaia Wallet...' });
                       }
                       return Promise.resolve(null);
                     },
@@ -131,7 +86,6 @@ export function KaiaWalletInitializer() {
                 })
               }));
             };
-
 
             var observer = null;
             var cleanupDone = false;
@@ -171,45 +125,20 @@ export function KaiaWalletInitializer() {
               observer = new MutationObserver(function() { requestAnimationFrame(cleanup); });
               observer.observe(document.body, { childList: true, subtree: true });
               cleanup();
-
-              // VISUAL DEBUG BOX TO PROVE INJECTION STATUS
-              try {
-                var debugBox = document.createElement('div');
-                debugBox.id = 'kaia-debug-box';
-                debugBox.style.position = 'fixed';
-                debugBox.style.bottom = '10px';
-                debugBox.style.left = '10px';
-                debugBox.style.backgroundColor = 'rgba(0,0,0,0.8)';
-                debugBox.style.color = '#00fe00';
-                debugBox.style.zIndex = '999999';
-                debugBox.style.padding = '8px';
-                debugBox.style.fontSize = '12px';
-                debugBox.style.borderRadius = '5px';
-                debugBox.style.pointerEvents = 'none';
-                document.body.appendChild(debugBox);
-                
-                setInterval(function() {
-                  if(document.getElementById('kaia-debug-box')) {
-                    document.getElementById('kaia-debug-box').innerHTML = 
-                    'v6 <br/>' +
-                    'K:' + !!window.klaytn + ' KA:' + !!window.kaia + '<br/>' +
-                    'E:' + !!window.ethereum + ' KS:' + !!window.kaikas;
-                  }
-                }, 1000);
-              } catch(e) {}
             };
             setupObserver();
 
-            // Wait 1.5s before starting announcements to avoid clashing with injection
+            window.addEventListener('load', function() { setTimeout(announceKaia, 1000); });
+
             setTimeout(function() {
               var announceAttempts = 0;
               var announceTimer = setInterval(function() {
                 announceKaia();
-                if (++announceAttempts >= 60) clearInterval(announceTimer); // 30 seconds total
+                if (++announceAttempts >= 30) clearInterval(announceTimer);
               }, 500);
               announceKaia();
               window.addEventListener('eip6963:requestProvider', announceKaia);
-            }, 1500);
+            }, 1000);
           })();
         `,
       }}
