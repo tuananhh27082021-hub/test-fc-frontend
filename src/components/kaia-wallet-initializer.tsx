@@ -8,16 +8,16 @@ export function KaiaWalletInitializer() {
             var STORE_URL = 'https://www.kaiawallet.io/';
             
             var getRealProvider = function() {
-              if (window.klaytn && !window.klaytn._isPolyfill) return window.klaytn;
-              if (window.kaia && !window.kaia._isPolyfill) return window.kaia;
-              if (window.ethereum && !window.ethereum._isDecoy) return window.ethereum;
-              
-              // Deep scan window for any Kaia/Kaikas related objects (In-app browser fallback)
+              // Try every known Kaia/Kaikas/Ethereum property
+              var p = window.klaytn || window.kaia || window.kaikas || (window.ethereum && !window.ethereum._isDecoy ? window.ethereum : null);
+              if (p && typeof p.request === 'function' && !p._isPolyfill) return p;
+
+              // Absolute fallback: scan for anything resembling a wallet provider
               try {
                 for (var key in window) {
-                   if (key.toLowerCase().indexOf('klaytn') !== -1 || key.toLowerCase().indexOf('kaikas') !== -1 || key.toLowerCase().indexOf('kaia') === 0) {
-                      var p = window[key];
-                      if (p && typeof p.request === 'function' && !p._isPolyfill) return p;
+                   if (key.toLowerCase().indexOf('klaytn') !== -1 || key.toLowerCase().indexOf('kaikas') !== -1) {
+                      var found = window[key];
+                      if (found && typeof found.request === 'function' && !found._isPolyfill) return found;
                    }
                 }
               } catch(e) {}
@@ -59,9 +59,10 @@ export function KaiaWalletInitializer() {
                                   if (retryReal) {
                                     clearInterval(check);
                                     resolve(retryReal.request(args));
-                                  } else if (++count > 15) { // ~10 seconds total
+                                  } else if (++count > 15) { // 10 seconds total
                                     clearInterval(check);
-                                    alert('Provider not detected. Please ensure you are logged into your Kaia Wallet app and try again.');
+                                    var diag = ' (k:' + !!window.klaytn + ', a:' + !!window.kaia + ', ks:' + !!window.kaikas + ', e:' + !!window.ethereum + ')';
+                                    alert('Kaia Wallet provider not detected' + diag + '. Please ensure you are logged in and refresh the page inside the app.');
                                     reject({ code: -32603, message: 'Provider missing' });
                                   }
                                }, 700);
@@ -96,13 +97,6 @@ export function KaiaWalletInitializer() {
               }));
             };
 
-            var announceAttempts = 0;
-            var announceTimer = setInterval(function() {
-              announceKaia();
-              if (++announceAttempts >= 40) clearInterval(announceTimer);
-            }, 500);
-            announceKaia();
-            window.addEventListener('eip6963:requestProvider', announceKaia);
 
             var observer = null;
             var cleanupDone = false;
