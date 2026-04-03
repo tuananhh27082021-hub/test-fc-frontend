@@ -1,0 +1,1175 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_baseToken",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor",
+    "signature": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "AnswerCancel",
+    "type": "event",
+    "signature": "0xc44b7d47900b866a89834eb60e5c942e75667868ed36fd748bc96878d0f96acc"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "answer",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxTotal",
+        "type": "uint256"
+      }
+    ],
+    "name": "AnswerResult",
+    "type": "event",
+    "signature": "0xebc572617bac8169bcf0f473126bf8d8fb35c6967b35cc7b7d208e21ce6039ce"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalVoted",
+        "type": "uint256"
+      }
+    ],
+    "name": "DecisionCancel",
+    "type": "event",
+    "signature": "0x2abbcf76a2f18b63e4dc0cbeab4c12350763e6a885b29b321f1e262d46cc055a"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "result",
+        "type": "string"
+      }
+    ],
+    "name": "DecisionResult",
+    "type": "event",
+    "signature": "0x5204d6754a47063eb8910da94cf3d0ab45d98441c2622f216bacbbed4f49e34c"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "ExecuteAdjourn",
+    "type": "event",
+    "signature": "0x95a07a73343898c59cf8fc067d336d4d883af94be2aad3a6f4dc516e38aebe36"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "GetReward",
+    "type": "event",
+    "signature": "0x8705b07c3a9dc05a1237dab83dec6a2245b290e517b7d38cff44e82d7aa7127f"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "question",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "createdAt",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "endAt",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "startBlock",
+        "type": "uint256"
+      }
+    ],
+    "name": "GovernanceItemCreated",
+    "type": "event",
+    "signature": "0xf9a4ba9acd866543ae98f38cc7d0ff66dd3e201da1489032149332a510bb5268"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event",
+    "signature": "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalVoted",
+        "type": "uint256"
+      }
+    ],
+    "name": "QuestCancel",
+    "type": "event",
+    "signature": "0xb5330e538c404b32785f8788e5fdcede3333d5c85ebda5c3934ab040866c51f9"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "result",
+        "type": "string"
+      }
+    ],
+    "name": "QuestResult",
+    "type": "event",
+    "signature": "0xa572eae95aeac0c28c027c87eae085e7125809992df9bce0bd86a5edc8d86748"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "createdAt",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "endAt",
+        "type": "uint256"
+      }
+    ],
+    "name": "StartAnswer",
+    "type": "event",
+    "signature": "0x7053655df7e7a48f7f7bc9a2c3df995b8f592741fae71c8d3fabf3c4c7b45205"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "createdAt",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "endAt",
+        "type": "uint256"
+      }
+    ],
+    "name": "StartDecision",
+    "type": "event",
+    "signature": "0x8458b562059f3f5533ab5267002f6f35ca4dc3e9f6f689396ada092e7e52a343"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "answerKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "voter",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "votes",
+        "type": "uint256"
+      }
+    ],
+    "name": "VoteAnswerCast",
+    "type": "event",
+    "signature": "0x10cde67e1855979410905a583ae98aeaec3696c8b279c7fcf08f72f7587fc583"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "answer",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "voter",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "votes",
+        "type": "uint256"
+      }
+    ],
+    "name": "VoteDecisionCast",
+    "type": "event",
+    "signature": "0x348e7f8287f3f3eec0a6baff6c21dd21687219bd28dc23844771b8f5ba1e44d3"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "answer",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "voter",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "votes",
+        "type": "uint256"
+      }
+    ],
+    "name": "VoteQuestCast",
+    "type": "event",
+    "signature": "0x2ce8dd24ae06ea1559c8afda9536f9300ab7015d0f1395894a354d5fc2b5b64b"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "_getQuestCountTotal",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0xb1de7260"
+  },
+  {
+    "inputs": [],
+    "name": "baseToken",
+    "outputs": [
+      {
+        "internalType": "contract MockToken",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0xc55dae63"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_answerKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAnswerKeyTotal",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0xd0f93e61"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getAnswerTotalVoted",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x3435e27a"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getApproverPlusRejector",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x85d39e6c"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getDecisionCount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x12593b82"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_voter",
+        "type": "address"
+      }
+    ],
+    "name": "getQuestMaxVoted",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x09492faf"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getQuestTotalVoted",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x32e935d9"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_answerKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "isSetAnswerKey",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x1b574f30"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_sender",
+        "type": "address"
+      }
+    ],
+    "name": "isVotedDecision",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x0a9971a9"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x8da5cb5b"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x715018a6"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "setAnswerEndTime",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x6ef8ffaa"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "setDecisionEndTime",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xe09ffb9e"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "setQuestEndTime",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x8e911a14"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xf2fde38b"
+  },
+  {
+    "inputs": [],
+    "name": "voteThreshold",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function",
+    "constant": true,
+    "signature": "0x4fe437d5"
+  },
+  {
+    "inputs": [],
+    "name": "votingDelay",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function",
+    "constant": true,
+    "signature": "0x3932abb1"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "question",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "creator",
+        "type": "address"
+      }
+    ],
+    "name": "createGovernanceItem",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x3b73ebaf"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "getGovernanceItem",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "questKey",
+            "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "question",
+            "type": "string"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "questResult",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "decisionResult",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "answerResult",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startBlock",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "questStartTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "decisionStartTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "answerStartTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "questEndTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "decisionEndTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "answerEndTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "rewardTokens",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "takenTokens",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct GovernanceItem",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x67731c18"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_answer",
+        "type": "string"
+      }
+    ],
+    "name": "voteQuest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x60c1f0f2"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "setQuestResult",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x7db21d0a"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_maker",
+        "type": "string"
+      }
+    ],
+    "name": "makeQuestResult",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x7932f1d2"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelQuest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xfe90ff7d"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "startDecision",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xe8559424"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_answer",
+        "type": "string"
+      }
+    ],
+    "name": "voteDecision",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x744a8c25"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_answerKeys",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "setDecisionAndExecuteAnswer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x5341b90d"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_maker",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_answerKeys",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "makeDecisionAndExecuteAnswer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xa2d42c88"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelDecision",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x97cafe50"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_answerKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "voteAnswer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x6b7ea125"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "_answerKeys",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_answerKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "setAnswer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xd26df7c0"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_reason",
+        "type": "string"
+      }
+    ],
+    "name": "cancelAnswer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x5498381b"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_totalReward",
+        "type": "uint256"
+      }
+    ],
+    "name": "setTotalReward",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x8d969c49"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_answerKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "distributeDaoReward",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x9bbed2ca"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_questKey",
+        "type": "uint256"
+      }
+    ],
+    "name": "retriveTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0x47e28c83"
+  },
+  {
+    "inputs": [],
+    "name": "getMinTotalVote",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x08eecf2b"
+  },
+  {
+    "inputs": [],
+    "name": "getMaxTotalVote",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x0b986d88"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_minOrMax",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_totalVote",
+        "type": "uint256"
+      }
+    ],
+    "name": "setTotalVote",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "signature": "0xe656cf35"
+  },
+  {
+    "inputs": [],
+    "name": "getTotalGovernance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function",
+    "constant": true,
+    "signature": "0x5eff21f3"
+  }
+]

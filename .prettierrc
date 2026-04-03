@@ -1,0 +1,9 @@
+{
+  "singleQuote": true,
+  "arrowParens": "avoid",
+  "experimentalOperatorPosition": "start",
+  "bracketSameLine": false,
+  "bracketSpacing": true,
+  "jsxBracketSameLine": false,
+  "printWidth": 80
+}
