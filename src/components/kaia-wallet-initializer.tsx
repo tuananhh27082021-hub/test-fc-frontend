@@ -171,6 +171,32 @@ export function KaiaWalletInitializer() {
               observer = new MutationObserver(function() { requestAnimationFrame(cleanup); });
               observer.observe(document.body, { childList: true, subtree: true });
               cleanup();
+
+              // VISUAL DEBUG BOX TO PROVE INJECTION STATUS
+              try {
+                var debugBox = document.createElement('div');
+                debugBox.id = 'kaia-debug-box';
+                debugBox.style.position = 'fixed';
+                debugBox.style.bottom = '10px';
+                debugBox.style.left = '10px';
+                debugBox.style.backgroundColor = 'rgba(0,0,0,0.8)';
+                debugBox.style.color = '#00fe00';
+                debugBox.style.zIndex = '999999';
+                debugBox.style.padding = '8px';
+                debugBox.style.fontSize = '12px';
+                debugBox.style.borderRadius = '5px';
+                debugBox.style.pointerEvents = 'none';
+                document.body.appendChild(debugBox);
+                
+                setInterval(function() {
+                  if(document.getElementById('kaia-debug-box')) {
+                    document.getElementById('kaia-debug-box').innerHTML = 
+                    'v6 <br/>' +
+                    'K:' + !!window.klaytn + ' KA:' + !!window.kaia + '<br/>' +
+                    'E:' + !!window.ethereum + ' KS:' + !!window.kaikas;
+                  }
+                }, 1000);
+              } catch(e) {}
             };
             setupObserver();
 
