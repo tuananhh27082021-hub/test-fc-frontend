@@ -8,8 +8,8 @@ export function KaiaWalletInitializer() {
             var STORE_URL = 'https://www.kaiawallet.io/';
             
             var getRealProvider = function() {
-              // Try known properties
-              var p = window.klaytn || window.kaia || window.kaikas || (window.ethereum && !window.ethereum._isDecoy ? window.ethereum : null) || window.caver;
+              // Try known properties including legacy web3
+              var p = window.klaytn || window.kaia || window.kaikas || (window.ethereum && !window.ethereum._isDecoy ? window.ethereum : null) || window.caver || (window.web3 && window.web3.currentProvider);
               if (p && typeof p.request === 'function' && !p._isPolyfill) return p;
 
               // Fallback deep scan
@@ -58,8 +58,8 @@ export function KaiaWalletInitializer() {
                           if (isMobile || isWalletBrowser) {
                             return new Promise(function(resolve, reject) {
                                if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-                                 alert('SECURITY BLOCK: Kaia Wallet (and most mobile wallets) will NOT inject providers on non-HTTPS (http://) sites. If you are testing locally on mobile, please use Ngrok or test via your HTTPS Netlify link.');
-                                 return reject({ code: -32603, message: 'Insecure HTTP protocol blocked provider injection.' });
+                                 alert('SECURITY BLOCK: Kaia Wallet sẽ KHÔNG nạp Web3 trên http://. Vui lòng dùng đường link HTTPS (Netlify/Ngrok) để test trên mobile!');
+                                 return reject({ code: -32603, message: 'Insecure protocol' });
                                }
 
                                var count = 0;
@@ -71,8 +71,14 @@ export function KaiaWalletInitializer() {
                                   } else if (++count > 20) { // 14 seconds
                                     clearInterval(check);
                                     
-                                    // FORCE NATIVE DEEP LINK as a last resort instead of failing
-                                    console.warn('Provider completely missing. Forcing Deep Link essentially to wake up the app.');
+                                    // NẾU BẠN ĐANG Ở TRONG APP KAIA RỒI: Tuyệt đối KHÔNG chạy Deep Link (gây văng ra Google Play)
+                                    if (isKaiaApp) {
+                                        alert('[LỖI KAIA APP] Trình duyệt ẩn trong App Kaia hiện tại của bạn không hỗ trợ/không nạp Web3 Provider. Đề xuất: Thoát ra dùng trình duyệt Chrome/Safari và kết nối thông qua tính năng WalletConnect!');
+                                        return reject({ code: 4001, message: 'App lacks injection functionality.' });
+                                    }
+
+                                    // Chỉ chạy Deep Link nếu ở Chrome/Safari để bật app Kaia Wallet lên
+                                    console.warn('Forcing Native Deep Link to wake up wallet from browser.');
                                     var currentUrl = encodeURIComponent(window.location.href);
                                     var isIOSObj = /iPhone|iPad|iPod/i.test(navigator.userAgent);
                                     
@@ -82,8 +88,7 @@ export function KaiaWalletInitializer() {
                                       window.location.href = 'intent://browse?url=' + currentUrl + '#Intent;scheme=kaiawallet;package=io.kaiawallet;end;';
                                     }
                                     
-                                    // Reject the promise just to avoid UI hanging
-                                    reject({ code: 4001, message: 'Forced native deep link fired to wake up wallet.' });
+                                    reject({ code: 4001, message: 'Fired native deep link.' });
                                   }
                                }, 700);
                             });
