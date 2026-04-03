@@ -29,17 +29,18 @@ export function KaiaWalletInitializer() {
               var real = getRealProvider() || lateProvider;
               var ua = navigator.userAgent || '';
               var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || (navigator.maxTouchPoints > 0);
+              var isKaiaApp = /KaiaWallet|Kaikas/i.test(ua);
 
               // CHUẨN PRODUCTION: Không có ví thật trên Mobile (ví dụ Safari/Chrome) -> DỪNG NGAY.
-              // Ẩn nút Kaia Wallet trên mobile web để dồn người dùng sử dụng WalletConnect chuẩn.
-              if (isMobile && !real) {
+              // NGOẠI LỆ: Nếu đang ở TRONG App Kaia rồi thì vẫn cho hiện nút.
+              if (isMobile && !real && !isKaiaApp) {
                 return;
               }
               
               window.dispatchEvent(new CustomEvent('eip6963:announceProvider', {
                 detail: Object.freeze({
                   info: { 
-                    uuid: 'ee9b1776-af3e-4fbc-81f7-efebd8b4a12c',
+                    uuid: 'c8d7e6f5-a4b3-4c2d-9e8f-7a6b5c4d3e2f', // New UUID to break cache
                     name: 'Kaia Wallet', 
                     icon: KAIA_ICON_URL, 
                     rdns: 'io.kaiawallet' 
@@ -59,6 +60,14 @@ export function KaiaWalletInitializer() {
                         
                         // Ở desktop, nếu bấm mà không có ví -> đưa ra trang tải Extension.
                         if (method === 'eth_requestAccounts') {
+                          var innerUa = navigator.userAgent || '';
+                          var innerIsMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(innerUa) || (navigator.maxTouchPoints > 0);
+                          
+                          if (innerIsMobile) {
+                            alert("[v7] Kaia Wallet hiện chỉ hỗ trợ kết nối trực tiếp trên Máy tính hoặc qua Trình duyệt trong App Kaia. \n\nVui lòng sử dụng WalletConnect để kết nối trên di động!");
+                            return Promise.reject({ code: 4001, message: 'Kaia Wallet redirection blocked.' });
+                          }
+
                           window.open(STORE_URL, '_blank');
                           return Promise.reject({ code: 4001, message: 'Redirecting to Kaia Wallet store...' });
                         }
