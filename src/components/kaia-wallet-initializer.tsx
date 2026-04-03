@@ -8,16 +8,16 @@ export function KaiaWalletInitializer() {
             var STORE_URL = 'https://www.kaiawallet.io/';
             
             var getRealProvider = function() {
-              // Try known properties including legacy web3
-              var p = window.klaytn || window.kaia || window.kaikas || (window.ethereum && !window.ethereum._isDecoy ? window.ethereum : null) || window.caver || (window.web3 && window.web3.currentProvider);
-              if (p && typeof p.request === 'function' && !p._isPolyfill) return p;
+              // Priority 1: Direct known properties (Trust all, no more filtering)
+              var p = window.klaytn || window.kaia || window.kaikas || window.ethereum || window.caver || (window.web3 && window.web3.currentProvider);
+              if (p && (typeof p.request === 'function' || typeof p.enable === 'function')) return p;
 
-              // Fallback deep scan
+              // Priority 2: Deep scan for anything that looks like a crypto wallet
               try {
                 for (var key in window) {
-                   if (key.toLowerCase().indexOf('klaytn') !== -1 || key.toLowerCase().indexOf('kaikas') !== -1) {
-                      var found = window[key];
-                      if (found && typeof found.request === 'function' && !found._isPolyfill) return found;
+                   if (key.toLowerCase().indexOf('klaytn') !== -1 || key.toLowerCase().indexOf('kaikas') !== -1 || key.toLowerCase().indexOf('kaia') === 0) {
+                      var pot = window[key];
+                      if (pot && (typeof pot.request === 'function' || typeof pot.enable === 'function')) return pot;
                    }
                 }
               } catch(e) {}
@@ -34,7 +34,7 @@ export function KaiaWalletInitializer() {
               var ua = navigator.userAgent || '';
               var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || (navigator.maxTouchPoints > 0);
               var isKaiaApp = /KaiaWallet|Kaikas/i.test(ua);
-              var isWalletBrowser = isKaiaApp || (window.klaytn || (window.ethereum && !window.ethereum._isDecoy));
+              var isWalletBrowser = isKaiaApp || (window.klaytn || window.ethereum);
 
               var real = getRealProvider() || lateProvider;
               
@@ -52,7 +52,13 @@ export function KaiaWalletInitializer() {
                       var method = (args && args.method) || '';
                       if (method === 'eth_requestAccounts' || method === 'eth_accounts') {
                         var currentReal = getRealProvider() || lateProvider;
-                        if (currentReal) return currentReal.request(args);
+                        if (currentReal) {
+                          // Try .enable() first for mobile compatibility if it's the requested method
+                          if (method === 'eth_requestAccounts' && typeof currentReal.enable === 'function') {
+                            return currentReal.enable();
+                          }
+                          return currentReal.request(args);
+                        }
                         
                         if (method === 'eth_requestAccounts') {
                           if (isMobile || isWalletBrowser) {
@@ -67,8 +73,12 @@ export function KaiaWalletInitializer() {
                                   var retryReal = getRealProvider() || lateProvider;
                                   if (retryReal) {
                                     clearInterval(check);
-                                    resolve(retryReal.request(args));
-                                  } else if (++count > 20) { // 14 seconds
+                                    if (typeof retryReal.enable === 'function') {
+                                       resolve(retryReal.enable());
+                                    } else {
+                                       resolve(retryReal.request(args));
+                                    }
+                                  } else if (++count > 25) { // 20 seconds approx
                                     clearInterval(check);
                                     
                                     // NẾU BẠN ĐANG Ở TRONG APP KAIA RỒI: Tuyệt đối KHÔNG chạy Deep Link (gây văng ra Google Play)
