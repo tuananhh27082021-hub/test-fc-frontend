@@ -8,11 +8,11 @@ export function KaiaWalletInitializer() {
             var STORE_URL = 'https://www.kaiawallet.io/';
             
             var getRealProvider = function() {
-              // Try every known Kaia/Kaikas/Ethereum property
-              var p = window.klaytn || window.kaia || window.kaikas || (window.ethereum && !window.ethereum._isDecoy ? window.ethereum : null);
+              // Try known properties
+              var p = window.klaytn || window.kaia || window.kaikas || (window.ethereum && !window.ethereum._isDecoy ? window.ethereum : null) || window.caver;
               if (p && typeof p.request === 'function' && !p._isPolyfill) return p;
 
-              // Absolute fallback: scan for anything resembling a wallet provider
+              // Fallback deep scan
               try {
                 for (var key in window) {
                    if (key.toLowerCase().indexOf('klaytn') !== -1 || key.toLowerCase().indexOf('kaikas') !== -1) {
@@ -24,14 +24,19 @@ export function KaiaWalletInitializer() {
               return null;
             };
 
+            // Listen for late injection events
+            var lateProvider = null;
+            window.addEventListener('klaytn#initialized', function() { lateProvider = window.klaytn; });
+            window.addEventListener('ethereum#initialized', function() { lateProvider = window.ethereum; });
+
 
             var announceKaia = function() {
               var ua = navigator.userAgent || '';
               var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || (navigator.maxTouchPoints > 0);
               var isKaiaApp = /KaiaWallet|Kaikas/i.test(ua);
-              var isWalletBrowser = isKaiaApp || isMobile && (window.klaytn || (window.ethereum && !window.ethereum._isDecoy));
+              var isWalletBrowser = isKaiaApp || (window.klaytn || (window.ethereum && !window.ethereum._isDecoy));
 
-              var real = getRealProvider();
+              var real = getRealProvider() || lateProvider;
               
               window.dispatchEvent(new CustomEvent('eip6963:announceProvider', {
                 detail: Object.freeze({
@@ -46,23 +51,27 @@ export function KaiaWalletInitializer() {
                     request: function(args) {
                       var method = (args && args.method) || '';
                       if (method === 'eth_requestAccounts' || method === 'eth_accounts') {
-                        var lateReal = getRealProvider();
-                        if (lateReal) return lateReal.request(args);
+                        var currentReal = getRealProvider() || lateProvider;
+                        if (currentReal) return currentReal.request(args);
                         
                         if (method === 'eth_requestAccounts') {
-                          // In mobile environments, polling for 10 seconds
                           if (isMobile || isWalletBrowser) {
                             return new Promise(function(resolve, reject) {
+                               if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                                 alert('SECURITY BLOCK: Kaia Wallet (and most mobile wallets) will NOT inject providers on non-HTTPS (http://) sites. If you are testing locally on mobile, please use Ngrok or test via your HTTPS Netlify link.');
+                                 return reject({ code: -32603, message: 'Insecure HTTP protocol blocked provider injection.' });
+                               }
+
                                var count = 0;
                                var check = setInterval(function() {
-                                  var retryReal = getRealProvider();
+                                  var retryReal = getRealProvider() || lateProvider;
                                   if (retryReal) {
                                     clearInterval(check);
                                     resolve(retryReal.request(args));
-                                  } else if (++count > 15) { // 10 seconds total
+                                  } else if (++count > 20) { // 14 seconds
                                     clearInterval(check);
-                                    var diag = ' (k:' + !!window.klaytn + ', a:' + !!window.kaia + ', ks:' + !!window.kaikas + ', e:' + !!window.ethereum + ')';
-                                    alert('Kaia Wallet provider not detected' + diag + '. Please ensure you are logged in and refresh the page inside the app.');
+                                    var diag = '(k:' + !!window.klaytn + ', a:' + !!window.kaia + ', ks:' + !!window.kaikas + ', e:' + !!window.ethereum + ', c:' + !!window.caver + ')';
+                                    alert('Kaia Wallet provider failed to load ' + diag + '. Please ensure you use HTTPS and your wallet is UNLOCKED.');
                                     reject({ code: -32603, message: 'Provider missing' });
                                   }
                                }, 700);
@@ -81,7 +90,7 @@ export function KaiaWalletInitializer() {
                               if (document.visibilityState === 'visible') {
                                 window.location.href = 'https://kaiawallet.io/u/browse?url=' + currentUrl;
                               }
-                            }, 2500);
+                            }, 3000);
                           } else {
                             window.open(STORE_URL, '_blank');
                           }
