@@ -10,8 +10,16 @@ export function KaiaWalletInitializer() {
             var getRealProvider = function() {
               if (window.klaytn && !window.klaytn._isPolyfill) return window.klaytn;
               if (window.kaia && !window.kaia._isPolyfill) return window.kaia;
-              // Check ethereum but ensure it is not our decoy
-              if (window.ethereum && !window.ethereum._isDecoy && (window.ethereum.isKaikas || window.ethereum.isKaia || window.ethereum.isKlaytn || window.ethereum.isMetaMask)) return window.ethereum;
+              // On mobile, often windows.ethereum just IS the wallet's injected provider.
+              if (window.ethereum && !window.ethereum._isDecoy) {
+                var ua = navigator.userAgent || '';
+                var isKaia = /KaiaWallet|Kaikas/i.test(ua);
+                if (isKaia) {
+                   window.ethereum.isKaikas = true;
+                   window.ethereum.isKaia = true;
+                }
+                return window.ethereum;
+              }
               return null;
             };
 
@@ -31,7 +39,7 @@ export function KaiaWalletInitializer() {
 
             var announceKaia = function() {
               var ua = navigator.userAgent || '';
-              // Broaden detection for ANY mobile wallet browser or injected state
+              // Detect if we are in ANY wallet-like environment
               var isWalletBrowser = /KaiaWallet|Kaikas|MetaMask|Trust|TokenPocket|Cipher|AlphaWallet/i.test(ua) || 
                                    (window.ethereum && !window.ethereum._isDecoy) || 
                                    (window.klaytn && !window.klaytn._isPolyfill) ||
@@ -57,15 +65,15 @@ export function KaiaWalletInitializer() {
                         if (lateReal) return lateReal.request(args);
                         
                         if (method === 'eth_requestAccounts') {
-                          // Force a small wait and retry if we think we are in a wallet environment
+                          // Prevent redirect loop if in mobile wallet environment
                           if (isWalletBrowser) {
-                            console.log('Wallet environment detected, waiting for provider...');
+                            console.log('Wallet detected, re-attempting provider check...');
                             return new Promise(function(resolve, reject) {
                                setTimeout(function() {
                                   var finalReal = getRealProvider();
                                   if (finalReal) resolve(finalReal.request(args));
                                   else {
-                                    alert('Kaia Wallet provider not found. Please ensure you are logged in or try refreshing the page.');
+                                    alert('Kaia Wallet provider not found. Please try refreshing the page inside the wallet browser.');
                                     reject({ code: -32603, message: 'Provider missing' });
                                   }
                                }, 1000);
@@ -83,7 +91,7 @@ export function KaiaWalletInitializer() {
                               window.location.href = intentUrl;
                             }
 
-                            // Universal Link Fallback - only trigger if window is still visible (app didn't open)
+                            // Universal Link Fallback
                             setTimeout(function() {
                               if (document.visibilityState === 'visible') {
                                 window.location.href = 'https://kaiawallet.io/u/browse?url=' + currentUrl;
