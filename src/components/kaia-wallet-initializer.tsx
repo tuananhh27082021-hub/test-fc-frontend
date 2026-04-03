@@ -26,12 +26,15 @@ export function KaiaWalletInitializer() {
             window.addEventListener('ethereum#initialized', function() { lateProvider = window.ethereum; });
 
             var announceKaia = function() {
+              var real = getRealProvider() || lateProvider;
               var ua = navigator.userAgent || '';
               var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || (navigator.maxTouchPoints > 0);
-              var isKaiaApp = /KaiaWallet|Kaikas/i.test(ua);
-              var isWalletBrowser = isKaiaApp || (window.klaytn || window.ethereum);
 
-              var real = getRealProvider() || lateProvider;
+              // CHUẨN PRODUCTION: Không có ví thật trên Mobile (ví dụ Safari/Chrome) -> DỪNG NGAY.
+              // Ẩn nút Kaia Wallet trên mobile web để dồn người dùng sử dụng WalletConnect chuẩn.
+              if (isMobile && !real) {
+                return;
+              }
               
               window.dispatchEvent(new CustomEvent('eip6963:announceProvider', {
                 detail: Object.freeze({
@@ -54,28 +57,10 @@ export function KaiaWalletInitializer() {
                           return currentReal.request(args);
                         }
                         
+                        // Ở desktop, nếu bấm mà không có ví -> đưa ra trang tải Extension.
                         if (method === 'eth_requestAccounts') {
-                          if (isMobile) {
-                            if (isKaiaApp) {
-                               // Silently fail in broken mobile apps to encourage WalletConnect use
-                               console.warn('Native injection blocked by Kaia mobile app. Use WalletConnect fallback.');
-                               return Promise.reject({ code: 4001, message: 'Please use WalletConnect to connect.' });
-                            } else {
-                               // Open App deep link if on normal Chrome/Safari mobile
-                               var currentUrl = encodeURIComponent(window.location.href);
-                               var isIOSObj = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-                               if (isIOSObj) {
-                                 window.location.href = 'kaiawallet://browse?url=' + currentUrl;
-                               } else {
-                                 window.location.href = 'https://kaiawallet.io/u/browse?url=' + currentUrl;
-                               }
-                               return Promise.reject({ code: 4001, message: 'Opening Kaia Wallet...' });
-                            }
-                          } else {
-                            // On Desktop, redirect to download store
-                            window.open(STORE_URL, '_blank');
-                            return Promise.reject({ code: 4001, message: 'Redirecting to Kaia Wallet store...' });
-                          }
+                          window.open(STORE_URL, '_blank');
+                          return Promise.reject({ code: 4001, message: 'Redirecting to Kaia Wallet store...' });
                         }
                       }
                       return Promise.resolve(null);
