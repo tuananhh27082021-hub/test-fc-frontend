@@ -2,9 +2,9 @@
   "name": "forecast",
   "version": "0.0.1",
   "engines": {
-    "node": "20"
+    "node": "22"
   },
-  "packageManager": "pnpm@9.15.9",
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
