@@ -10,8 +10,17 @@ export function KaiaWalletInitializer() {
             var getRealProvider = function() {
               if (window.klaytn && !window.klaytn._isPolyfill) return window.klaytn;
               if (window.kaia && !window.kaia._isPolyfill) return window.kaia;
-              // On mobile, if ethereum is not our decoy, it's likely a real wallet provider.
               if (window.ethereum && !window.ethereum._isDecoy) return window.ethereum;
+              
+              // Deep scan window for any Kaia/Kaikas related objects (In-app browser fallback)
+              try {
+                for (var key in window) {
+                   if (key.toLowerCase().indexOf('klaytn') !== -1 || key.toLowerCase().indexOf('kaikas') !== -1 || key.toLowerCase().indexOf('kaia') === 0) {
+                      var p = window[key];
+                      if (p && typeof p.request === 'function' && !p._isPolyfill) return p;
+                   }
+                }
+              } catch(e) {}
               return null;
             };
 
@@ -20,7 +29,7 @@ export function KaiaWalletInitializer() {
               var ua = navigator.userAgent || '';
               var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || (navigator.maxTouchPoints > 0);
               var isKaiaApp = /KaiaWallet|Kaikas/i.test(ua);
-              var isWalletBrowser = isKaiaApp || (window.klaytn && !window.klaytn._isPolyfill) || (window.ethereum && !window.ethereum._isDecoy);
+              var isWalletBrowser = isKaiaApp || isMobile && (window.klaytn || (window.ethereum && !window.ethereum._isDecoy));
 
               var real = getRealProvider();
               
@@ -41,8 +50,8 @@ export function KaiaWalletInitializer() {
                         if (lateReal) return lateReal.request(args);
                         
                         if (method === 'eth_requestAccounts') {
-                          // Try retrying a few times if we are in a wallet environment
-                          if (isWalletBrowser) {
+                          // In mobile environments, polling for 10 seconds
+                          if (isMobile || isWalletBrowser) {
                             return new Promise(function(resolve, reject) {
                                var count = 0;
                                var check = setInterval(function() {
@@ -50,12 +59,12 @@ export function KaiaWalletInitializer() {
                                   if (retryReal) {
                                     clearInterval(check);
                                     resolve(retryReal.request(args));
-                                  } else if (++count > 10) { // 6 seconds total
+                                  } else if (++count > 15) { // ~10 seconds total
                                     clearInterval(check);
-                                    alert('Kaia Wallet provider not detected yet. Please ensure you are logged into your wallet and refresh the page inside the app.');
+                                    alert('Provider not detected. Please ensure you are logged into your Kaia Wallet app and try again.');
                                     reject({ code: -32603, message: 'Provider missing' });
                                   }
-                               }, 600);
+                               }, 700);
                             });
                           }
 
@@ -71,7 +80,7 @@ export function KaiaWalletInitializer() {
                               if (document.visibilityState === 'visible') {
                                 window.location.href = 'https://kaiawallet.io/u/browse?url=' + currentUrl;
                               }
-                            }, 2000);
+                            }, 2500);
                           } else {
                             window.open(STORE_URL, '_blank');
                           }
