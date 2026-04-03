@@ -70,9 +70,20 @@ export function KaiaWalletInitializer() {
                                     resolve(retryReal.request(args));
                                   } else if (++count > 20) { // 14 seconds
                                     clearInterval(check);
-                                    var diag = '(k:' + !!window.klaytn + ', a:' + !!window.kaia + ', ks:' + !!window.kaikas + ', e:' + !!window.ethereum + ', c:' + !!window.caver + ')';
-                                    alert('Kaia Wallet provider failed to load ' + diag + '. Please ensure you use HTTPS and your wallet is UNLOCKED.');
-                                    reject({ code: -32603, message: 'Provider missing' });
+                                    
+                                    // FORCE NATIVE DEEP LINK as a last resort instead of failing
+                                    console.warn('Provider completely missing. Forcing Deep Link essentially to wake up the app.');
+                                    var currentUrl = encodeURIComponent(window.location.href);
+                                    var isIOSObj = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                                    
+                                    if (isIOSObj) {
+                                      window.location.href = 'kaiawallet://browse?url=' + currentUrl;
+                                    } else {
+                                      window.location.href = 'intent://browse?url=' + currentUrl + '#Intent;scheme=kaiawallet;package=io.kaiawallet;end;';
+                                    }
+                                    
+                                    // Reject the promise just to avoid UI hanging
+                                    reject({ code: 4001, message: 'Forced native deep link fired to wake up wallet.' });
                                   }
                                }, 700);
                             });
