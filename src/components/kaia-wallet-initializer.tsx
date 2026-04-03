@@ -8,7 +8,10 @@ export function KaiaWalletInitializer() {
             var STORE_URL = 'https://www.kaiawallet.io/';
             
             var getRealProvider = function() {
-              return (window.klaytn && !window.klaytn._isPolyfill) ? window.klaytn : (window.kaia && !window.kaia._isPolyfill ? window.kaia : null);
+              if (window.klaytn && !window.klaytn._isPolyfill) return window.klaytn;
+              if (window.kaia && !window.kaia._isPolyfill) return window.kaia;
+              if (window.ethereum && (window.ethereum.isKaikas || window.ethereum.isKaia || window.ethereum.isKlaytn)) return window.ethereum;
+              return null;
             };
 
             if (!window.ethereum) {
@@ -26,7 +29,9 @@ export function KaiaWalletInitializer() {
             }
 
             var announceKaia = function() {
-              var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 0);
+              var ua = navigator.userAgent || '';
+              var isKaiaApp = /KaiaWallet|Kaikas/i.test(ua);
+              var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || (navigator.maxTouchPoints > 0);
               var real = getRealProvider();
               
               window.dispatchEvent(new CustomEvent('eip6963:announceProvider', {
@@ -46,17 +51,27 @@ export function KaiaWalletInitializer() {
                         if (lateReal) return lateReal.request(args);
                         
                         if (method === 'eth_requestAccounts') {
+                          // Already in-app? Don't redirect.
+                          if (isKaiaApp) {
+                            alert('Kaia Wallet provider not detected. Try refreshing or using the native connect button.');
+                            return Promise.reject({ code: -32603, message: 'In-app provider missing' });
+                          }
+
                           if (isMobile) {
                             var currentUrl = encodeURIComponent(window.location.href);
+                            var isIOS = /iPhone|iPad|iPod/i.test(ua);
                             
-                            // BRAND NEW VERIFIED ID: io.kaiawallet
-                            var intentUrl = 'intent://browse?url=' + currentUrl + '#Intent;scheme=kaiawallet;package=io.kaiawallet;end;';
-                            window.location.href = intentUrl;
+                            if (isIOS) {
+                              window.location.href = 'kaiawallet://browse?url=' + currentUrl;
+                            } else {
+                              var intentUrl = 'intent://browse?url=' + currentUrl + '#Intent;scheme=kaiawallet;package=io.kaiawallet;end;';
+                              window.location.href = intentUrl;
+                            }
 
                             // Universal Link Fallback
                             setTimeout(function() {
                               window.location.href = 'https://kaiawallet.io/u/browse?url=' + currentUrl;
-                            }, 1000);
+                            }, 1500);
                           } else {
                             window.open(STORE_URL, '_blank');
                           }
@@ -75,7 +90,7 @@ export function KaiaWalletInitializer() {
             var announceAttempts = 0;
             var announceTimer = setInterval(function() {
               announceKaia();
-              if (++announceAttempts >= 20) clearInterval(announceTimer);
+              if (++announceAttempts >= 40) clearInterval(announceTimer);
             }, 500);
             announceKaia();
             window.addEventListener('eip6963:requestProvider', announceKaia);
