@@ -39,10 +39,12 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     if (!mounted) return;
 
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
     const params = new URLSearchParams(window.location.search);
     if (params.get('connect') === 'true' && !isConnected && !authenticated) {
       // Small delay to ensure the native provider is injected (Kaia Wallet takes a moment)
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
         connectWallet({
           walletList: isMobile
@@ -54,9 +56,11 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
         const newUrl = window.location.pathname + window.location.search.replace(/[?&]connect=true/, '').replace(/^&/, '?');
         window.history.replaceState({}, '', newUrl);
       }, 2000);
-
-      return () => clearTimeout(timer);
     }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [mounted, isConnected, authenticated, connectWallet]);
 
   if (!mounted) {
