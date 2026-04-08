@@ -66,8 +66,11 @@ export function KaiaWalletInitializer() {
                         var lateReal = getRealProvider();
                         if (lateReal) return lateReal.request(args);
                         
-                        // ONLY redirect if we are on mobile and NOT already in a wallet browser
-                        if (isMobile && !isInWalletBrowser()) {
+                        // ONLY redirect if we are on mobile, NOT already in a wallet browser, 
+                        // and NOT already coming from a redirect (to avoid loops)
+                        var isAlreadyRedirected = window.location.search.indexOf('connect=true') !== -1;
+                        
+                        if (isMobile && !isInWalletBrowser() && !isAlreadyRedirected) {
                           var currentUrl = window.location.href;
                           var targetUrl = currentUrl + (currentUrl.indexOf('?') === -1 ? '?' : '&') + 'connect=true';
                           var encodedTarget = encodeURIComponent(targetUrl);
