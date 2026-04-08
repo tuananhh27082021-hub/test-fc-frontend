@@ -36,27 +36,31 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
+  const hasTriggered = React.useRef(false);
 
+  useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
 
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('connect') === 'true' && !isConnected && !authenticated) {
-      // 2.5s delay to ensure the native provider is fully injected/ready before triggered
-      timer = setTimeout(() => {
-        const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
-        connectWallet({
-          walletList: isMobile
-            ? ['wallet_connect']
-            : ['detected_ethereum_wallets', 'wallet_connect'],
-        });
+    if (mounted && !hasTriggered.current) {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('connect') === 'true' && !isConnected && !authenticated) {
+        hasTriggered.current = true;
 
-        // Cleanup the URL parameter
+        // Cleanup the URL parameter immediately to prevent re-triggering
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.delete('connect');
         window.history.replaceState({}, '', currentUrl.toString());
-      }, 2500);
+
+        // 2.5s delay to ensure the native provider is fully injected/ready before triggered
+        timer = setTimeout(() => {
+          const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+          connectWallet({
+            walletList: isMobile
+              ? ['wallet_connect']
+              : ['detected_ethereum_wallets', 'wallet_connect'],
+          });
+        }, 2500);
+      }
     }
 
     return () => {
