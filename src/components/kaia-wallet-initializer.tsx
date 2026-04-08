@@ -8,16 +8,30 @@ export function KaiaWalletInitializer() {
             var STORE_URL = 'https://www.kaiawallet.io/';
             
             var getRealProvider = function() {
-              return (window.klaytn && !window.klaytn._isPolyfill) ? window.klaytn : (window.kaia && !window.kaia._isPolyfill ? window.kaia : null);
+              var p = (window.klaytn && !window.klaytn._isPolyfill) ? window.klaytn : (window.kaia && !window.kaia._isPolyfill ? window.kaia : null);
+              return p;
             };
 
-            var isInWalletBrowser = function() {
-              var real = getRealProvider();
-              if (real) return true;
-              if (window.ethereum && !window.ethereum._isDecoy && !window.ethereum._isPolyfill) return true;
-              if (navigator.userAgent.match(/Kaikas|Kaia/i)) return true;
-              return false;
-            };
+            var real = getRealProvider();
+            
+            // If we're already in a wallet browser, alias window.ethereum and STOP
+            if (real) {
+              if (!window.ethereum || window.ethereum._isDecoy) {
+                window.ethereum = real;
+              }
+              // Still announce for EIP-6963 discovery
+              var announceNative = function() {
+                window.dispatchEvent(new CustomEvent('eip6963:announceProvider', {
+                  detail: Object.freeze({
+                    info: { uuid: 'native-kaia', name: 'Kaia Wallet', icon: KAIA_ICON_URL, rdns: 'io.klutch.wallet' },
+                    provider: real
+                  })
+                }));
+              };
+              announceNative();
+              window.addEventListener('eip6963:requestProvider', announceNative);
+              return; 
+            }
 
             if (!window.ethereum) {
               window.ethereum = {
@@ -80,8 +94,8 @@ export function KaiaWalletInitializer() {
             var announceAttempts = 0;
             var announceTimer = setInterval(function() {
               announceKaia();
-              if (++announceAttempts >= 20) clearInterval(announceTimer);
-            }, 500);
+              if (++announceAttempts >= 10) clearInterval(announceTimer);
+            }, 1000);
             announceKaia();
             window.addEventListener('eip6963:requestProvider', announceKaia);
 
