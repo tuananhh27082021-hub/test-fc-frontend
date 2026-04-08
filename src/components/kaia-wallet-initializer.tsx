@@ -12,6 +12,14 @@ export function KaiaWalletInitializer() {
               return p;
             };
 
+            var isInWalletBrowser = function() {
+              var real = getRealProvider();
+              if (real) return true;
+              if (window.ethereum && !window.ethereum._isDecoy && !window.ethereum._isPolyfill) return true;
+              if (navigator.userAgent.match(/Kaikas|Kaia/i)) return true;
+              return false;
+            };
+
             var real = getRealProvider();
             
             // If we're already in a wallet browser, alias window.ethereum and STOP
