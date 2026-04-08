@@ -85,11 +85,18 @@ export const MobileNav = memo(({ connected }: { connected: boolean }) => {
   const [isWalletDialogOpen, setIsWalletDialogOpen] = useState(false);
   const { isConnected } = useAccount();
   const { disconnect } = useDisconnect();
-  const { login, logout } = usePrivy();
+  const { connectWallet, logout } = usePrivy();
 
   const handleLinkClick = useCallback(() => {
     setOpen(false);
   }, []);
+
+  const handleLogin = async () => {
+    await connectWallet({
+      walletList: ['detected_ethereum_wallets', 'wallet_connect'],
+    });
+    setOpen(false);
+  };
 
   const handleLogout = useCallback(async () => {
     try {
@@ -149,7 +156,7 @@ export const MobileNav = memo(({ connected }: { connected: boolean }) => {
         >
           {!isConnected
             ? (
-                <MenuItem onClick={() => login()}>Login</MenuItem>
+                <MenuItem onClick={handleLogin}>Login</MenuItem>
               )
             : (
                 <MenuItem href={ROUTES.PROFILE} onClick={handleLinkClick}>

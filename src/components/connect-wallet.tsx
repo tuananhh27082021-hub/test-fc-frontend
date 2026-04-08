@@ -126,11 +126,16 @@ export function WalletOptionsDialog({
   onOpenChange,
 }: WalletOptionsDialogProps) {
   const { connectors, connect } = useConnect();
-  const { login, authenticated } = usePrivy();
+  const { connectWallet, authenticated } = usePrivy();
 
   const handlePrivyLogin = async () => {
     try {
-      await login();
+      // Allow detected wallets on both desktop and mobile. 
+      // On mobile, our Kaia polyfill will show up under 'detected_ethereum_wallets'.
+      await connectWallet({
+        walletList: ['detected_ethereum_wallets', 'wallet_connect'],
+      });
+
       if (onOpenChange) {
         onOpenChange(false);
       }

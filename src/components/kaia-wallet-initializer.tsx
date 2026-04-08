@@ -8,69 +8,60 @@ export function KaiaWalletInitializer() {
             var STORE_URL = 'https://www.kaiawallet.io/';
             
             var getRealProvider = function() {
-              var p = window.klaytn || window.kaia || window.kaikas || window.ethereum || window.caver || (window.web3 && window.web3.currentProvider);
-              if (p && (typeof p.request === 'function' || typeof p.enable === 'function')) return p;
-              try {
-                for (var key in window) {
-                   if (key.toLowerCase().indexOf('klaytn') !== -1 || key.toLowerCase().indexOf('kaikas') !== -1 || key.toLowerCase().indexOf('kaia') === 0) {
-                      var pot = window[key];
-                      if (pot && (typeof pot.request === 'function' || typeof pot.enable === 'function')) return pot;
-                   }
-                }
-              } catch(e) {}
-              return null;
+              return (window.klaytn && !window.klaytn._isPolyfill) ? window.klaytn : (window.kaia && !window.kaia._isPolyfill ? window.kaia : null);
             };
 
-            var lateProvider = null;
-            window.addEventListener('klaytn#initialized', function() { lateProvider = window.klaytn; });
-            window.addEventListener('ethereum#initialized', function() { lateProvider = window.ethereum; });
+            if (!window.ethereum) {
+              window.ethereum = {
+                _isDecoy: true,
+                request: function(args) {
+                  var method = (args && args.method) || '';
+                  if (method === 'eth_accounts') return Promise.resolve([]);
+                  if (method === 'eth_chainId') return Promise.resolve('0x1');
+                  return Promise.reject({ code: 4001 });
+                },
+                on: function() { return this; }, removeListener: function() { return this; },
+                addListener: function() { return this; }, off: function() { return this; }
+              };
+            }
 
             var announceKaia = function() {
-              var real = getRealProvider() || lateProvider;
-              var ua = navigator.userAgent || '';
-              var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua) || (navigator.maxTouchPoints > 0);
-              var isKaiaApp = /KaiaWallet|Kaikas/i.test(ua);
-
-              // CHUẨN PRODUCTION: Không có ví thật trên Mobile (ví dụ Safari/Chrome) -> DỪNG NGAY.
-              // NGOẠI LỆ: Nếu đang ở TRONG App Kaia rồi thì vẫn cho hiện nút.
-              if (isMobile && !real && !isKaiaApp) {
-                return;
-              }
+              var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 0);
+              var real = getRealProvider();
               
               window.dispatchEvent(new CustomEvent('eip6963:announceProvider', {
                 detail: Object.freeze({
                   info: { 
-                    uuid: 'c8d7e6f5-a4b3-4c2d-9e8f-7a6b5c4d3e2f', // New UUID to break cache
+                    uuid: 'ee9b1776-af3e-4fbc-81f7-efebd8b4a12c',
                     name: 'Kaia Wallet', 
                     icon: KAIA_ICON_URL, 
-                    rdns: 'io.kaiawallet' 
+                    rdns: 'io.klutch.wallet' 
                   },
                   provider: real || {
                     _isPolyfill: true,
                     request: function(args) {
                       var method = (args && args.method) || '';
                       if (method === 'eth_requestAccounts' || method === 'eth_accounts') {
-                        var currentReal = getRealProvider() || lateProvider;
-                        if (currentReal) {
-                          if (method === 'eth_requestAccounts' && typeof currentReal.enable === 'function') {
-                            return currentReal.enable();
-                          }
-                          return currentReal.request(args);
-                        }
+                        var lateReal = getRealProvider();
+                        if (lateReal) return lateReal.request(args);
                         
-                        // Ở desktop, nếu bấm mà không có ví -> đưa ra trang tải Extension.
                         if (method === 'eth_requestAccounts') {
-                          var innerUa = navigator.userAgent || '';
-                          var innerIsMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(innerUa) || (navigator.maxTouchPoints > 0);
-                          
-                          if (innerIsMobile) {
-                            alert("[v7] Kaia Wallet hiện chỉ hỗ trợ kết nối trực tiếp trên Máy tính hoặc qua Trình duyệt trong App Kaia. \n\nVui lòng sử dụng WalletConnect để kết nối trên di động!");
-                            return Promise.reject({ code: 4001, message: 'Kaia Wallet redirection blocked.' });
-                          }
+                          if (isMobile) {
+                            var currentUrl = encodeURIComponent(window.location.href);
+                            
+                            // BRAND NEW VERIFIED ID: io.kaiawallet
+                             var intentUrl = 'intent://wallet/browser?url=' + currentUrl + '#Intent;scheme=kaiawallet;package=io.klutch.wallet;end;';
+                            window.location.href = intentUrl;
 
-                          window.open(STORE_URL, '_blank');
-                          return Promise.reject({ code: 4001, message: 'Redirecting to Kaia Wallet store...' });
+                            // Universal Link Fallback
+                            setTimeout(function() {
+                              window.location.href = 'https://app.kaiawallet.io/u/' + currentUrl;
+                            }, 1000);
+                          } else {
+                            window.open(STORE_URL, '_blank');
+                          }
                         }
+                        return Promise.reject({ code: 4001, message: 'Redirecting to Kaia Wallet...' });
                       }
                       return Promise.resolve(null);
                     },
@@ -80,6 +71,14 @@ export function KaiaWalletInitializer() {
                 })
               }));
             };
+
+            var announceAttempts = 0;
+            var announceTimer = setInterval(function() {
+              announceKaia();
+              if (++announceAttempts >= 20) clearInterval(announceTimer);
+            }, 500);
+            announceKaia();
+            window.addEventListener('eip6963:requestProvider', announceKaia);
 
             var observer = null;
             var cleanupDone = false;
@@ -121,18 +120,6 @@ export function KaiaWalletInitializer() {
               cleanup();
             };
             setupObserver();
-
-            window.addEventListener('load', function() { setTimeout(announceKaia, 1000); });
-
-            setTimeout(function() {
-              var announceAttempts = 0;
-              var announceTimer = setInterval(function() {
-                announceKaia();
-                if (++announceAttempts >= 30) clearInterval(announceTimer);
-              }, 500);
-              announceKaia();
-              window.addEventListener('eip6963:requestProvider', announceKaia);
-            }, 1000);
           })();
         `,
       }}

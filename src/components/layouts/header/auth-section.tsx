@@ -7,8 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Account } from '../../connect-wallet';
 
 export const AuthSection = memo(() => {
-  const { authenticated, login } = usePrivy();
+  const { authenticated, connectWallet } = usePrivy();
   const { isConnected } = useAccount();
+
+  const handleLogin = async () => {
+    await connectWallet({
+      walletList: ['detected_ethereum_wallets', 'wallet_connect'],
+    });
+  };
 
   if (isConnected || authenticated) {
     return (
@@ -19,7 +25,7 @@ export const AuthSection = memo(() => {
   }
 
   return (
-    <Button variant="highlight" onClick={() => login()}>
+    <Button variant="highlight" onClick={handleLogin}>
       Login
     </Button>
   );
