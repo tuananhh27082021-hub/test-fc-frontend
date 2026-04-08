@@ -43,7 +43,7 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
 
     const params = new URLSearchParams(window.location.search);
     if (params.get('connect') === 'true' && !isConnected && !authenticated) {
-      // Small delay to ensure the native provider is injected (Kaia Wallet takes a moment)
+      // 2.5s delay to ensure the native provider is fully injected/ready before triggered
       timer = setTimeout(() => {
         const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
         connectWallet({
@@ -52,10 +52,11 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
             : ['detected_ethereum_wallets', 'wallet_connect'],
         });
 
-        // Cleanup the URL
-        const newUrl = window.location.pathname + window.location.search.replace(/[?&]connect=true/, '').replace(/^&/, '?');
-        window.history.replaceState({}, '', newUrl);
-      }, 2000);
+        // Cleanup the URL parameter
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete('connect');
+        window.history.replaceState({}, '', currentUrl.toString());
+      }, 2500);
     }
 
     return () => {
