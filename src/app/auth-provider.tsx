@@ -1,5 +1,6 @@
 'use client';
 
+import { usePrivy } from '@privy-io/react-auth';
 import type { FC, ReactNode } from 'react';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
@@ -22,7 +23,8 @@ type AuthProviderProps = {
 };
 
 export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
-  const { address } = useAccount();
+  const { authenticated, connectWallet } = usePrivy();
+  const { address, isConnected } = useAccount();
   const [mounted, setMounted] = useState(false);
   const { referralCode } = useReferral();
   const { data, refetch } = useGetMember(address, referralCode);
@@ -33,6 +35,25 @@ export const AuthProvider: FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('connect') === 'true' && !isConnected && !authenticated) {
+      // Trigger the login modal
+      const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      connectWallet({
+        walletList: isMobile
+          ? ['wallet_connect']
+          : ['detected_ethereum_wallets', 'wallet_connect'],
+      });
+
+      // Cleanup the URL
+      const newUrl = window.location.pathname + window.location.search.replace(/[?&]connect=true/, '').replace(/^&/, '?');
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [mounted, isConnected, authenticated, connectWallet]);
 
   if (!mounted) {
     return null;

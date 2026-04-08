@@ -11,6 +11,14 @@ export function KaiaWalletInitializer() {
               return (window.klaytn && !window.klaytn._isPolyfill) ? window.klaytn : (window.kaia && !window.kaia._isPolyfill ? window.kaia : null);
             };
 
+            var isInWalletBrowser = function() {
+              var real = getRealProvider();
+              if (real) return true;
+              if (window.ethereum && !window.ethereum._isDecoy && !window.ethereum._isPolyfill) return true;
+              if (navigator.userAgent.match(/Kaikas|Kaia/i)) return true;
+              return false;
+            };
+
             if (!window.ethereum) {
               window.ethereum = {
                 _isDecoy: true,
@@ -27,8 +35,7 @@ export function KaiaWalletInitializer() {
 
             var announceKaia = function() {
               var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 0);
-              var real = getRealProvider();
-              
+              var real = getRealProvider();          
               window.dispatchEvent(new CustomEvent('eip6963:announceProvider', {
                 detail: Object.freeze({
                   info: { 
@@ -45,21 +52,19 @@ export function KaiaWalletInitializer() {
                         var lateReal = getRealProvider();
                         if (lateReal) return lateReal.request(args);
                         
-                        if (method === 'eth_requestAccounts') {
-                          if (isMobile) {
-                            var currentUrl = encodeURIComponent(window.location.href);
-                            
-                            // BRAND NEW VERIFIED ID: io.kaiawallet
-                             var intentUrl = 'intent://wallet/browser?url=' + currentUrl + '#Intent;scheme=kaiawallet;package=io.klutch.wallet;end;';
-                            window.location.href = intentUrl;
+                        // ONLY redirect if we are on mobile and NOT already in a wallet browser
+                        if (isMobile && !isInWalletBrowser()) {
+                          var currentUrl = window.location.href;
+                          var targetUrl = currentUrl + (currentUrl.indexOf('?') === -1 ? '?' : '&') + 'connect=true';
+                          var encodedTarget = encodeURIComponent(targetUrl);
+                          
+                          var intentUrl = 'intent://wallet/browser?url=' + encodedTarget + '#Intent;scheme=kaiawallet;package=io.klutch.wallet;end;';
+                          window.location.href = intentUrl;
 
-                            // Universal Link Fallback
-                            setTimeout(function() {
-                              window.location.href = 'https://app.kaiawallet.io/u/' + currentUrl;
-                            }, 1000);
-                          } else {
-                            window.open(STORE_URL, '_blank');
-                          }
+                          setTimeout(function() {
+                            // Safe Universal Link fallback
+                            window.location.href = 'https://app.kaiawallet.io/u/' + targetUrl;
+                          }, 1000);
                         }
                         return Promise.reject({ code: 4001, message: 'Redirecting to Kaia Wallet...' });
                       }
